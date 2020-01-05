@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "540298310849",
+    "firebase_url": "https://uraccar-6de2d.firebaseio.com",
+    "project_id": "uraccar-6de2d",
+    "storage_bucket": "uraccar-6de2d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:540298310849:android:e447fc0ed7e9b777761040",
+        "android_client_info": {
+          "package_name": "com.example.zolup"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "540298310849-6phs6ntn13d1pc1c29ftjgio0asri274.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDil3xHcfvwB1_TbCOiYoTGNmecAjAT4_4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "540298310849-6phs6ntn13d1pc1c29ftjgio0asri274.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
