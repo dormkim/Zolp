@@ -7,7 +7,8 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.LocationManager;
 import android.os.Bundle;
-import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -26,21 +27,20 @@ import net.daum.mf.map.api.MapView;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 
 import jxl.Sheet;
 import jxl.Workbook;
 import jxl.read.biff.BiffException;
 
-public class MainActivity extends AppCompatActivity implements MapView.CurrentLocationEventListener, MapReverseGeoCoder.ReverseGeoCodingResultListener {
+public class MainActivity extends AppCompatActivity implements MapView.CurrentLocationEventListener, MapReverseGeoCoder.ReverseGeoCodingResultListener, MapView.POIItemEventListener {
 
-    private static final String LOG_TAG = "MainActivity";
-
+    private Button button;
     private MapView mMapView;
     private MapPolyline polyline;
     private String[] timeList;
     private double[][] mapInfo;
     private int rowTotal;
+    private String marker_name;
 
     private static final int GPS_ENABLE_REQUEST_CODE = 2001;
     private static final int PERMISSIONS_REQUEST_CODE = 100;
@@ -53,10 +53,14 @@ public class MainActivity extends AppCompatActivity implements MapView.CurrentLo
 
         mMapView = findViewById(R.id.map_view);
         mMapView.setDaumMapApiKey("751d8c6a990081b07a441473207f841a");
-//        mMapView.setCurrentLocationEventListener(this);
+        //mMapView.setCurrentLocationEventListener(this);
+        button = findViewById(R.id.check_button);
+        button.setVisibility(View.INVISIBLE);
 
         InputExcel();
         setLocation();
+
+        mMapView.setPOIItemEventListener(this);
 
         if (!checkLocationServicesStatus()) {
             showDialogForLocationServiceSetting();
@@ -108,8 +112,7 @@ public class MainActivity extends AppCompatActivity implements MapView.CurrentLo
             MapPoint mapPoint = MapPoint.mapPointWithGeoCoord(mapInfo[i][0], mapInfo[i][1]);
 
             MapPOIItem marker = new MapPOIItem();
-            marker.setItemName("시간" + timeList[i]);
-            marker.setTag(0);
+            marker.setItemName("방문시간 : " + timeList[i]);
             marker.setMapPoint(mapPoint);
             // 기본으로 제공하는 BluePin 마커 모양.
             marker.setMarkerType(MapPOIItem.MarkerType.BluePin);
@@ -133,10 +136,9 @@ public class MainActivity extends AppCompatActivity implements MapView.CurrentLo
 
     @Override
     public void onCurrentLocationUpdate(MapView mapView, MapPoint currentLocation, float accuracyInMeters) {
-        MapPoint.GeoCoordinate mapPointGeo = currentLocation.getMapPointGeoCoord();
-        Log.i(LOG_TAG, String.format("MapView onCurrentLocationUpdate (%f,%f) accuracy (%f)", mapPointGeo.latitude, mapPointGeo.longitude, accuracyInMeters));
+//        MapPoint.GeoCoordinate mapPointGeo = currentLocation.getMapPointGeoCoord();
+//        Log.i(LOG_TAG, String.format("MapView onCurrentLocationUpdate (%f,%f) accuracy (%f)", mapPointGeo.latitude, mapPointGeo.longitude, accuracyInMeters));
     }
-
 
     @Override
     public void onCurrentLocationDeviceHeadingUpdate(MapView mapView, float v) {
@@ -160,17 +162,32 @@ public class MainActivity extends AppCompatActivity implements MapView.CurrentLo
     }
 
     @Override
+    public void onPOIItemSelected(MapView mapView, MapPOIItem mapPOIItem) {
+        MapReverseGeoCoder reverseGeoCoder = new MapReverseGeoCoder("775dd77e45bda1a0d0758e7c462a8fb5", MapPoint.mapPointWithGeoCoord(mapPOIItem.getMapPoint().getMapPointGeoCoord().latitude, mapPOIItem.getMapPoint().getMapPointGeoCoord().longitude), this, this);
+        marker_name = mapPOIItem.getItemName();
+        reverseGeoCoder.startFindingAddress();
+    }
+
+    /*지도의 주소를 못찾았을경우 */
+    @Override
     public void onReverseGeoCoderFailedToFindAddress(MapReverseGeoCoder mapReverseGeoCoder) {
         onFinishReverseGeoCoding("Fail");
     }
 
-    private void onFinishReverseGeoCoding(String result) {
-//        Toast.makeText(LocationDemoActivity.this, "Reverse Geo-coding : " + result, Toast.LENGTH_SHORT).show();
+    /*지도의 주소를 찾았을 경우(지번주소로 표시)*/
+    private void onFinishReverseGeoCoding(final String result) {
+        button.setVisibility(View.VISIBLE);
+
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(getApplicationContext(), InputPointInfo.class);
+                intent.putExtra("address", result);
+                intent.putExtra("marker_name", marker_name);
+                startActivity(intent);
+            }
+        });
     }
-
-
-
-
     /*
      * ActivityCompat.requestPermissions를 사용한 퍼미션 요청의 결과를 리턴받는 메소드입니다.
      */
@@ -275,5 +292,20 @@ public class MainActivity extends AppCompatActivity implements MapView.CurrentLo
     public boolean checkLocationServicesStatus() {
         LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) || locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+    }
+
+    @Override
+    public void onCalloutBalloonOfPOIItemTouched(MapView mapView, MapPOIItem mapPOIItem) {
+
+    }
+
+    @Override
+    public void onCalloutBalloonOfPOIItemTouched(MapView mapView, MapPOIItem mapPOIItem, MapPOIItem.CalloutBalloonButtonType calloutBalloonButtonType) {
+
+    }
+
+    @Override
+    public void onDraggablePOIItemMoved(MapView mapView, MapPOIItem mapPOIItem, MapPoint mapPoint) {
+
     }
 }
